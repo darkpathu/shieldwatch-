@@ -22,15 +22,17 @@ def calculate_verdict(clamav: dict, yara: dict, static: dict) -> dict:
         score += 10
         reasons.append("High entropy indicates possible packing or obfuscation")
 
-    # 4️⃣ 🔹 Zero-day heuristic logic (NEW)
+    # 4️⃣ Heuristic entropy logic
     heuristic = static.get("heuristic", {})
-    heuristic_score = heuristic.get("heuristic_score", 0)
+    score += heuristic.get("heuristic_score", 0)
+    reasons.extend(heuristic.get("heuristic_reasons", []))
 
-    if heuristic_score > 0 and not clamav.get("detected"):
-        score += heuristic_score
-        reasons.extend(heuristic.get("heuristic_reasons", []))
+    # 5️⃣ Behavior-based zero-day logic
+    behavior = static.get("behavior", {})
+    score += behavior.get("behavior_score", 0)
+    reasons.extend(behavior.get("behavior_reasons", []))
 
-    # 5️⃣ Final verdict decision
+    # 6️⃣ Final verdict
     if score >= 70:
         verdict = "Malicious"
     elif score >= 40:
@@ -43,4 +45,5 @@ def calculate_verdict(clamav: dict, yara: dict, static: dict) -> dict:
         "risk_score": score,
         "reasons": reasons
     }
+
 
